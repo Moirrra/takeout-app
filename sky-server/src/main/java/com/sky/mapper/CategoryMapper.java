@@ -24,4 +24,10 @@ public interface CategoryMapper {
      * @return
      */
     Page<Category> pageQuery(CategoryPageQueryDTO categoryPageQueryDTO);
+
+    /**
+     * 启用禁用分类
+     * @param category
+     */
+    void update(Category category);
 }
