@@ -1,6 +1,8 @@
 server:
   port: 8080
 
+#  spring.resources.static-locations=classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/,file:uploads/
+
 spring:
   profiles:
     active: dev
@@ -37,3 +39,5 @@ sky:
     admin-ttl: 7200000
     # 设置前端传递过来的令牌名称
     admin-token-name: token
+
+
