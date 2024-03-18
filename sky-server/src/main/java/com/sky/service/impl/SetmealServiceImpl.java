@@ -60,4 +60,18 @@ public class SetmealServiceImpl implements SetmealService {
         // 包装PageResult
         return new PageResult(page.getTotal(), page.getResult());
     }
+
+    /**
+     * 套餐起售停售
+     * @param status
+     * @param id
+     */
+    @Override
+    public void enableOrDisable(Integer status, Long id) {
+        Setmeal setmeal = Setmeal.builder()
+                .id(id)
+                .status(status)
+                .build();
+        setmealMapper.update(setmeal);
+    }
 }
