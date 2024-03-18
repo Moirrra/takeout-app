@@ -116,6 +116,10 @@ public class DishServiceImpl implements DishService {
         return dishVO;
     }
 
+    /**
+     * 修改菜品&口味
+     * @param dishDTO
+     */
     @Override
     public void updateWithFlavor(DishDTO dishDTO) {
         // dish
@@ -128,4 +132,17 @@ public class DishServiceImpl implements DishService {
         dishFlavorMapper.insertBatch(dishDTO.getFlavors());
     }
 
+    /**
+     * 起售停售菜品
+     * @param status
+     * @param id
+     */
+    @Override
+    public void enableOrDisable(Integer status, Long id) {
+        Dish dish = Dish.builder()
+                .id(id)
+                .status(status)
+                .build();
+        dishMapper.update(dish);
+    }
 }
