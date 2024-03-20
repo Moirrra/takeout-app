@@ -70,4 +70,11 @@ public interface DishMapper {
      * @return
      */
     List<Dish> getBySetmealId(Long setmealId);
+
+    /**
+     * 动态查找菜品(name categoryId status)
+     * @param dish
+     * @return
+     */
+    List<Dish> list(Dish dish);
 }
