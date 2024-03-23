@@ -80,4 +80,13 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         ShoppingCart shoppingCart = ShoppingCart.builder().userId(userId).build();
         return shoppingCartMapper.list(shoppingCart);
     }
+
+    /**
+     * 清空购物车
+     */
+    @Override
+    public void clearShoppingCart() {
+        Long userId = BaseContext.getCurrentId();
+        shoppingCartMapper.deleteByUserId(userId);
+    }
 }
