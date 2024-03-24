@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
+import com.sky.constant.StatusConstant;
 import com.sky.context.BaseContext;
 import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.dto.OrdersPaymentDTO;
@@ -74,6 +75,7 @@ public class OrderServiceImpl implements OrderService {
         orders.setStatus(Orders.PENDING_PAYMENT);
         orders.setNumber(String.valueOf(System.currentTimeMillis()));
         orders.setPhone(addressBook.getPhone());
+        orders.setAddress(addressBook.getDetail());
         orders.setConsignee(addressBook.getConsignee()); // 收货人
         orders.setUserId(userId);
 
@@ -198,15 +200,47 @@ public class OrderServiceImpl implements OrderService {
         Orders orders = orderMapper.getById(id);
         // 查询订单详情
         List<OrderDetail> orderDetailList = orderDetailMapper.queryByOrderId(orders.getId());
-        // 查询地址详情
-        Long address_book_id = orders.getAddressBookId();
-        AddressBook addressBook = addressBookMapper.getById(address_book_id);
 
         OrderVO orderVO = new OrderVO();
         BeanUtils.copyProperties(orders, orderVO);
         orderVO.setOrderDetailList(orderDetailList);
-        orderVO.setAddress(addressBook.getDetail());
 
         return orderVO;
+    }
+
+    /**
+     * 取消订单
+     * @param id
+     */
+    @Override
+    public void cancel(Long id) {
+        // 查询订单
+        Orders orders = orderMapper.getById(id);
+
+        // 判断订单是否存在
+        if (orders == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        Integer status = orders.getStatus();
+        // 根据订单状态判断 1待付款 2待接单 3已接单 4派送中 5已完成 6已取消
+        // 待支付1 和待接单2 状态下，用户可直接取消订单
+        // 其他情况不可直接取消订单 前端会限制不发送请求
+        if (status > Orders.TO_BE_CONFIRMED) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        // 待接单状态下取消订单，需要给用户退款
+        if(status.equals(Orders.TO_BE_CONFIRMED)) {
+            orders.setPayStatus(Orders.REFUND);
+        }
+
+        // 将订单状态修改为“已取消”
+        orders.setStatus(Orders.CANCELLED);
+        orders.setCancelReason("用户取消");
+        orders.setCancelTime(LocalDateTime.now());
+
+        // 更新订单
+        orderMapper.update(orders);
     }
 }
