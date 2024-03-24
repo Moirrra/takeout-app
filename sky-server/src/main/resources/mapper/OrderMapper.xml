@@ -46,4 +46,16 @@
         </set>
         where id = #{id}
     </update>
+
+    <!-- 分页查询历史订单 -->
+    <select id="pageQuery" resultType="Orders">
+        select * from orders
+        <where>
+            <if test="status != null">
+                status = #{status} and
+            </if>
+            user_id = #{userId}
+        </where>
+
+    </select>
 </mapper>
