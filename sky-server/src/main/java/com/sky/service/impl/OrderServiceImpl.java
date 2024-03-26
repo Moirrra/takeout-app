@@ -5,9 +5,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
-import com.sky.dto.OrdersPageQueryDTO;
-import com.sky.dto.OrdersPaymentDTO;
-import com.sky.dto.OrdersSubmitDTO;
+import com.sky.dto.*;
 import com.sky.entity.*;
 import com.sky.exception.AddressBookBusinessException;
 import com.sky.exception.OrderBusinessException;
@@ -328,6 +326,117 @@ public class OrderServiceImpl implements OrderService {
         BeanUtils.copyProperties(orders, orderVO);
         orderVO.setOrderDetailList(orderDetailList);
         return orderVO;
+    }
+
+    /**
+     * 接单
+     * @param ordersConfirmDTO
+     */
+    @Override
+    public void confirm(OrdersConfirmDTO ordersConfirmDTO) {
+        // 修改订单状态为接单
+        Orders orders = Orders.builder()
+                .id(ordersConfirmDTO.getId())
+                .status(Orders.CONFIRMED)
+                .build();
+
+        orderMapper.update(orders);
+    }
+
+    /**
+     * 拒单
+     * @param ordersRejectionDTO
+     */
+    @Override
+    public void rejection(OrdersRejectionDTO ordersRejectionDTO) {
+        // 获取订单
+        Orders orderDB = orderMapper.getById(ordersRejectionDTO.getId());
+
+        // 只有订单处于待接单状态时可以执行拒单
+        if (orderDB == null || !orderDB.getStatus().equals(Orders.TO_BE_CONFIRMED)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        // 将订单状态修改为已取消, 更新取消时间&拒单原因
+        Orders orders = Orders.builder()
+                                .id(ordersRejectionDTO.getId())
+                                .status(Orders.CANCELLED)
+                                .cancelTime(LocalDateTime.now())
+                                .rejectionReason(ordersRejectionDTO.getRejectionReason())
+                                .build();
+
+        // 若订单已支付 需要退款
+        if (orderDB.getPayMethod().equals(Orders.PAID)) {
+            orders.setPayStatus(Orders.REFUND);
+        }
+
+        orderMapper.update(orders);
+    }
+
+    /**
+     * 商家取消订单
+     * @param ordersCancelDTO
+     */
+    @Override
+    public void orderCancel(OrdersCancelDTO ordersCancelDTO) {
+        // 获取订单
+        Orders orderDB = orderMapper.getById(ordersCancelDTO.getId());
+
+        // 将订单状态修改为已取消, 更新取消时间&原因
+        Orders orders = Orders.builder()
+                .id(ordersCancelDTO.getId())
+                .status(Orders.CANCELLED)
+                .cancelTime(LocalDateTime.now())
+                .cancelReason(ordersCancelDTO.getCancelReason())
+                .build();
+
+        // 若订单已支付 需要退款
+        if (orderDB.getPayMethod().equals(Orders.PAID)) {
+            orders.setPayStatus(Orders.REFUND);
+        }
+
+        orderMapper.update(orders);
+    }
+
+
+    /**
+     * 派送订单
+     * @param id
+     */
+    @Override
+    public void delivery(Long id) {
+        Orders orderDB = orderMapper.getById(id);
+        // 只有状态为“待派送”的订单可以执行派送订单操作
+        if (orderDB == null || !orderDB.getStatus().equals(Orders.CONFIRMED)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+        // 将订单状态修改为“派送中”
+        Orders orders = Orders.builder()
+                .id(id)
+                .status(Orders.DELIVERY_IN_PROGRESS)
+                .build();
+        orderMapper.update(orders);
+    }
+
+    /**
+     * 完成订单
+     * @param id
+     */
+    @Override
+    public void complete(Long id) {
+        Orders orderDB = orderMapper.getById(id);
+        // 只有状态为“派送中”的订单可以执行订单完成操作
+        if (orderDB == null || !orderDB.getStatus().equals(Orders.DELIVERY_IN_PROGRESS)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        // 将订单状态修改为“已完成”
+        Orders orders = Orders.builder()
+                .id(id)
+                .status(Orders.COMPLETED)
+                .deliveryTime(LocalDateTime.now())
+                .build();
+        orderMapper.update(orders);
     }
 
     /**

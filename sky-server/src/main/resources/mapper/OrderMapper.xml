@@ -15,7 +15,7 @@
 
     </insert>
 
-
+    <!-- 更新订单 -->
     <update id="update" parameterType="Orders">
         update orders
         <set>
@@ -60,10 +60,9 @@
             <if test="status != null">
                 and status = #{status}
             </if>
-            <if test="user_id != null">
-                and user_id = #{userId}
-            </if>
+            and user_id = #{userId}
         </where>
+        order by order_time desc
     </select>
 
     <select id="conditionSearch" resultType="Orders">
