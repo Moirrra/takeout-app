@@ -47,15 +47,38 @@
         where id = #{id}
     </update>
 
-    <!-- 分页查询历史订单 -->
+    <!-- 用户端分页查询历史订单 -->
     <select id="pageQuery" resultType="Orders">
         select * from orders
         <where>
-            <if test="status != null">
-                status = #{status} and
+            <if test="number != null">
+                and number like concat('%', #{number}, '%')
             </if>
-            user_id = #{userId}
+            <if test="phone != null">
+                and phone like concat('%', #{phone}, '%')
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+            <if test="user_id != null">
+                and user_id = #{userId}
+            </if>
         </where>
-
     </select>
+
+    <select id="conditionSearch" resultType="Orders">
+        select * from orders
+        <where>
+            <if test="number != null">
+                and number like concat('%', #{number}, '%')
+            </if>
+            <if test="phone != null">
+                and phone like concat('%', #{phone}, '%')
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+    </select>
+
 </mapper>
